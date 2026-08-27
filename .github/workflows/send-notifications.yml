@@ -1,0 +1,27 @@
+name: Odeslani planovanych notifikaci
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: send-notifications
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: |
+          code=$(curl -sS -o response.json -w "%{http_code}" \
+            --max-time 300 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://fruwe-hub-3-test.vercel.app/api/cron/send-notifications")
+          echo "HTTP $code"
+          if [ "$code" != "200" ]; then
+            exit 1
+          fi

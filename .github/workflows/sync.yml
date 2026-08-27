@@ -1,0 +1,27 @@
+name: Sync
+
+on:
+  schedule:
+    - cron: "13 4-17 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: |
+          code=$(curl -sS -o response.json -w "%{http_code}" \
+            --max-time 300 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SYNC_URL }}")
+          echo "HTTP $code"
+          if [ "$code" != "200" ]; then
+            exit 1
+          fi
